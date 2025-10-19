@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_egui::{EguiContexts, EguiPlugin, egui};
 use my_library::RandomNumberGenerator;
 
+// Vincent: States is specificially for state machine view of games
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Default, States)]
 enum GamePhase {
     #[default]
@@ -21,6 +22,9 @@ struct Scores {
     cpu: usize,
 }
 
+// Vincent: dit is een "tag" component, bevat zelf geen extra info
+// dient voor de dobbelstenen
+// elke dobbelsteen die deel uitmaakt van een reeks heeft dit
 #[derive(Component)]
 struct HandDie;
 
@@ -28,6 +32,7 @@ struct HandDie;
 struct Random(RandomNumberGenerator);
 
 #[derive(Resource)]
+// Vincent: dit is omdat we niet meteen elke dobbelsteen tegelijk willen rollen voor CPU
 struct HandTimer(Timer);
 
 fn setup(
@@ -37,6 +42,7 @@ fn setup(
 ) {
     commands.spawn(Camera2d::default());
     let texture = asset_server.load("dice.png");
+    // Vincent: 6 vierkantjes met zijden van 52 pixels
     let layout = TextureAtlasLayout::from_grid(UVec2::splat(52), 6, 1, None, None);
     let texture_atlas_layout = texture_atlas_layouts.add(layout);
     commands.insert_resource(GameAssets {
@@ -45,7 +51,7 @@ fn setup(
     });
     commands.insert_resource(Scores { cpu: 0, player: 0 });
     commands.insert_resource(Random(RandomNumberGenerator::new()));
-    commands.insert_resource(HandTimer(Timer::from_seconds(0.5, TimerMode::Repeating)));
+    commands.insert_resource(HandTimer(Timer::from_seconds(1.0, TimerMode::Repeating)));
 }
 
 fn display_score(scores: Res<Scores>, mut egui_context: EguiContexts) {
@@ -55,6 +61,9 @@ fn display_score(scores: Res<Scores>, mut egui_context: EguiContexts) {
     });
 }
 
+// Vincent: dus we vragen alle dobbelstenen die deel uitmaken van huidige hand?
+// we achterhalen hoe de afbeelding er uitziet en we plaatsen ze
+// score updatet nog niet, dat is pas aan einde beurt
 fn spawn_die(
     hand_query: &Query<(Entity, &Sprite), With<HandDie>>,
     commands: &mut Commands,
@@ -78,6 +87,7 @@ fn spawn_die(
     ));
 }
 
+// eigenlijk eerder "clear_dice": alle dobbelstenen uit huidige hand verdwijnen
 fn clear_die(hand_query: &Query<(Entity, &Sprite), With<HandDie>>, commands: &mut Commands) {
     hand_query
         .iter()
@@ -94,6 +104,7 @@ fn player(
     mut egui_context: EguiContexts,
 ) {
     egui::Window::new("Play Options").show(egui_context.ctx_mut(), |ui| {
+        // bepaal de *huidige hand* score, niet de huidige totaalscore
         let hand_score: usize = hand_query
             .iter()
             .map(|(_, ts)| ts.texture_atlas.as_ref().unwrap().index + 1)
@@ -130,7 +141,7 @@ fn player(
 fn cpu(
     hand_query: Query<(Entity, &Sprite), With<HandDie>>,
     mut state: ResMut<NextState<GamePhase>>,
-    scores: Res<Scores>,
+    mut scores: ResMut<Scores>,
     mut rng: ResMut<Random>,
     mut commands: Commands,
     assets: Res<GameAssets>,
@@ -143,6 +154,7 @@ fn cpu(
             .iter()
             .map(|(_, ts)| ts.texture_atlas.as_ref().unwrap().index + 1)
             .sum();
+        // Vincent: CPU mikt dus op 20 of hoger en wil in totaal score van 100 halen
         if hand_total < 20 && scores.cpu + hand_total < 100 {
             let new_roll = rng.0.range(1..7);
             if new_roll == 1 {
@@ -157,6 +169,12 @@ fn cpu(
                     Color::Srgba(Srgba::new(0.0, 0.0, 1.0, 1.0)),
                 );
             }
+        } else {
+            scores.cpu += hand_total;
+            state.set(GamePhase::Player);
+            hand_query
+                .iter()
+                .for_each(|(entity, _)| commands.entity(entity).despawn());
         }
     }
 }
