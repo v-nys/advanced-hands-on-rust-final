@@ -1,7 +1,7 @@
 pub use rand;
 
-mod random;
-pub use random::*;
+mod random_locking;
+pub use random_locking::*;
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right
