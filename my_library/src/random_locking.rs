@@ -28,14 +28,14 @@ impl RandomNumberGenerator {
         }
     }
 
-    pub fn next<T>(&mut self) -> T
+    pub fn next<T>(&self) -> T
     where
         rand::distributions::Standard: rand::prelude::Distribution<T>,
     {
         self.rng.lock().unwrap().r#gen()
     }
 
-    pub fn range<T>(&mut self, range: impl SampleRange<T>) -> T
+    pub fn range<T>(&self, range: impl SampleRange<T>) -> T
     where
         T: rand::distributions::uniform::SampleUniform + PartialOrd,
     {
