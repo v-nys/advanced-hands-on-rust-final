@@ -6,4 +6,4 @@ edition = "2024"
 [dependencies]
 bevy = { workspace = true }
 bevy_egui = "0.34"
-my_library = { path="../my_library/" }
+my_library = { path="../my_library/", package="my_library", features=["locking"] }

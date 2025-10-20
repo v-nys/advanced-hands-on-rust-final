@@ -20,3 +20,4 @@ harness = false
 default = [ "rand_xorshift" ]
 # see dependency names above
 xorshift = [ "rand_xorshift" ]
+locking = []
