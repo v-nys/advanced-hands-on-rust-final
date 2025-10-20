@@ -7,7 +7,6 @@ edition = "2024"
 criterion = { version = "0.7.0", features = ["html_reports"] }
 rand = { workspace = true }
 # optional means Cargo won't include it unless requested
-rand_pcg = { workspace = true, optional = true }
 rand_xorshift = { workspace = true, optional = true }
 
 [[bench]]
@@ -16,7 +15,7 @@ harness = false
 
 [features]
 # default feature set
-default = [ "pcg" ]
+# rand_xorshift is faster than default generator, so use that as default
+default = [ "rand_xorshift" ]
 # see dependency names above
-pcg = [ "rand_pcg" ]
 xorshift = [ "rand_xorshift" ]

@@ -1,11 +1,11 @@
-use rand::{distributions::uniform::SampleRange, Rng, SeedableRng};
+use rand::{Rng, SeedableRng, distributions::uniform::SampleRange};
 
 // library users can pick algo
-#[cfg(feature = "xorshift")]
-type RngCore = rand_xorshift::XorShiftRng;
-
 #[cfg(not(feature = "xorshift"))]
 type RngCore = rand::prelude::StdRng;
+
+#[cfg(feature = "xorshift")]
+type RngCore = rand_xorshift::XorShiftRng;
 
 pub struct RandomNumberGenerator {
     rng: RngCore,
