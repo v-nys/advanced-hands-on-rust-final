@@ -1,24 +1,22 @@
-use rand::{
-    Rng, SeedableRng,
-    distributions::uniform::{SampleRange, SampleUniform},
-    prelude::StdRng,
-};
-use std::ops::Range;
+use rand::{Rng, SeedableRng, distributions::uniform::SampleRange};
+
+// introduce alias for easy switching
+type RngCore = rand::prelude::StdRng;
 
 pub struct RandomNumberGenerator {
-    rng: StdRng,
+    rng: RngCore,
 }
 
 impl RandomNumberGenerator {
     pub fn new() -> Self {
         Self {
-            rng: StdRng::from_entropy(),
+            rng: RngCore::from_entropy(),
         }
     }
 
     pub fn seeded(seed: u64) -> Self {
         Self {
-            rng: StdRng::seed_from_u64(seed),
+            rng: RngCore::seed_from_u64(seed),
         }
     }
 
