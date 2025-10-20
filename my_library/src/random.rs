@@ -1,4 +1,5 @@
 use rand::{Rng, SeedableRng, distributions::uniform::SampleRange};
+pub struct RandomPlugin;
 
 // library users can pick algo
 #[cfg(not(feature = "xorshift"))]
@@ -7,6 +8,7 @@ type RngCore = rand::prelude::StdRng;
 #[cfg(feature = "xorshift")]
 type RngCore = rand_xorshift::XorShiftRng;
 
+#[derive(bevy::prelude::Resource)]
 pub struct RandomNumberGenerator {
     rng: RngCore,
 }
@@ -43,6 +45,12 @@ impl RandomNumberGenerator {
 impl Default for RandomNumberGenerator {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl bevy::prelude::Plugin for RandomPlugin {
+    fn build(&self, app: &mut bevy::prelude::App) {
+        app.insert_resource(RandomNumberGenerator::new());
     }
 }
 
