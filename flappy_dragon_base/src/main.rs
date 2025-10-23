@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use my_library::*;
 
-#[derive(Clone, PartialEq, Eq, Debug, Hash, Default, States)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash, Default, States, Copy)]
 enum GamePhase {
     MainMenu,
     #[default]
@@ -41,7 +41,7 @@ fn main() {
             }),
             ..default()
         }))
-        .add_plugins(RandomPlugin) //(6)
+        .add_plugins(RandomPlugin)
         .add_plugins(GameStatePlugin::new(
             GamePhase::MainMenu,
             GamePhase::Flapping,
