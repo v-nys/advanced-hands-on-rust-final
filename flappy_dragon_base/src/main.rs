@@ -1,4 +1,4 @@
-use bevy::{app::AppExit, prelude::*};
+use bevy::prelude::*;
 use my_library::*;
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash, Default, States)]
@@ -59,7 +59,7 @@ fn main() {
 fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut rng: ResMut<RandomNumberGenerator>, //(7)
+    rng: ResMut<RandomNumberGenerator>, //(7)
 ) {
     let assets = Assets {
         //(8)
@@ -125,7 +125,7 @@ fn move_walls(
     mut query: Query<&mut Transform, With<Obstacle>>,
     delete: Query<Entity, With<Obstacle>>,
     assets: Res<Assets>,
-    mut rng: ResMut<RandomNumberGenerator>,
+    rng: ResMut<RandomNumberGenerator>,
 ) {
     let mut rebuild = false;
     for mut transform in query.iter_mut() {
