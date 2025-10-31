@@ -1,14 +1,21 @@
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, EguiPlugin, egui};
-use my_library::{RandomNumberGenerator, RandomPlugin};
+use my_library::{RandomNumberGenerator, RandomPlugin, add_phase, cleanup};
 
 // Vincent: States is specificially for state machine view of games
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Default, States)]
 enum GamePhase {
     #[default]
+    MainMenu,
+    Start,
     Player,
     Cpu,
+    End,
+    GameOver,
 }
+
+#[derive(Component)]
+pub struct GameElement;
 
 #[derive(Resource)]
 struct GameAssets {
@@ -20,6 +27,33 @@ struct GameAssets {
 struct Scores {
     player: usize,
     cpu: usize,
+}
+
+// newtype!
+#[derive(Resource)]
+struct FinalScore(Scores);
+
+fn end_game(mut state: ResMut<NextState<GamePhase>>, scores: Res<Scores>, mut commands: Commands) {
+    commands.insert_resource(FinalScore(*scores));
+    state.set(GamePhase::GameOver);
+}
+
+fn check_game_over(mut state: ResMut<NextState<GamePhase>>, scores: Res<Scores>) {
+    if scores.cpu >= 100 || scores.player >= 100 {
+        state.set(GamePhase::End);
+    }
+}
+
+fn display_final_score(scores: Res<FinalScore>, mut egui_context: EguiContexts) {
+    egui::Window::new("Total Scores").show(egui_context.ctx_mut(), |ui| {
+        ui.label(&format!("Player: {}", scores.0.player));
+        ui.label(&format!("CPU: {}", scores.0.cpu));
+        if scores.0.player < scores.0.cpu {
+            ui.label("CPU wins!");
+        } else {
+            ui.label("Player wins!");
+        }
+    });
 }
 
 // Vincent: dit is een "tag" component, bevat zelf geen extra info
@@ -37,7 +71,7 @@ fn setup(
     mut commands: Commands,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    commands.spawn(Camera2d::default());
+    commands.spawn(Camera2d::default()).insert(GameElement);
     let texture = asset_server.load("dice.png");
     // Vincent: 6 vierkantjes met zijden van 52 pixels
     let layout = TextureAtlasLayout::from_grid(UVec2::splat(52), 6, 1, None, None);
@@ -81,7 +115,13 @@ fn spawn_die(
         sprite,
         Transform::from_xyz(rolled_die - 400.0, 60.0, 1.0),
         HandDie,
+        GameElement,
     ));
+}
+
+// Vincent: interessant, kunnen op deze manier control flow doen (dus met NextState)
+fn start_game(mut state: ResMut<NextState<GamePhase>>) {
+    state.set(GamePhase::Player);
 }
 
 // eigenlijk eerder "clear_dice": alle dobbelstenen uit huidige hand verdwijnen
@@ -171,21 +211,17 @@ fn cpu(
 }
 
 fn main() {
-    App::new()
-        .add_plugins(DefaultPlugins)
+    let mut app = App::new();
+    add_phase!(app, GamePhase, GamePhase::Start, start => [ setup ], run => [ start_game ], exit => [ ]);
+    add_phase!(app, GamePhase, GamePhase::Player, start => [], run => [ player, check_game_over, display_score ], exit => [ ]);
+    add_phase!(app, GamePhase, GamePhase::Cpu, start => [], run => [ cpu, check_game_over, display_score ], exit => [ ]);
+    add_phase!(app, GamePhase, GamePhase::End, start => [], run => [ end_game ], exit => [ cleanup::<GameElement> ]);
+    add_phase!(app, GamePhase, GamePhase::GameOver, start => [], run => [ display_final_score ], exit => [ ]);
+    app.add_plugins(DefaultPlugins)
         .add_plugins(RandomPlugin)
         .add_plugins(EguiPlugin {
             enable_multipass_for_primary_context: false,
         })
         .add_systems(Startup, setup)
-        .init_state::<GamePhase>()
-        .add_systems(
-            Update,
-            (
-                display_score,
-                player.run_if(in_state(GamePhase::Player)),
-                cpu.run_if(in_state(GamePhase::Cpu)),
-            ),
-        )
         .run();
 }

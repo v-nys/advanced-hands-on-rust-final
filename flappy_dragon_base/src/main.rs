@@ -30,15 +30,6 @@ struct Assets {
     wall: Handle<Image>,
 }
 
-#[macro_export]
-macro_rules! add_phase {
-    ($app:expr, $type:ty, $phase:expr, start => [ $($start:expr),* ], run => [ $($run:expr),* ], exit => [ $($exit:expr),* ]) => {
-        $($app.add_systems(bevy::prelude::OnEnter::<$type>($phase),$start);)*
-        $($app.add_systems(bevy::prelude::Update, $run.run_if(in_state($phase)));)*
-        $($app.add_systems(bevy::prelude::OnExit::<$type>($phase),$exit);)*
-    };
-}
-
 fn main() {
     let mut app = App::new();
     add_phase!(app, GamePhase, GamePhase::Flapping, start => [setup], run => [gravity, flap, clamp, move_walls, hit_wall], exit => [cleanup::<FlappyElement>]);
@@ -161,13 +152,4 @@ fn hit_wall(
             }
         }
     }
-}
-
-pub fn cleanup<T>(query: Query<Entity, With<T>>, mut commands: Commands)
-where
-    T: Component,
-{
-    query
-        .iter()
-        .for_each(|entity| commands.entity(entity).despawn())
 }
