@@ -30,33 +30,34 @@ struct Assets {
     wall: Handle<Image>,
 }
 
+#[macro_export]
+macro_rules! add_phase {
+    ($app:expr, $type:ty, $phase:expr, start => [ $($start:expr),* ], run => [ $($run:expr),* ], exit => [ $($exit:expr),* ]) => {
+        $($app.add_systems(bevy::prelude::OnEnter::<$type>($phase),$start);)*
+        $($app.add_systems(bevy::prelude::Update, $run.run_if(in_state($phase)));)*
+        $($app.add_systems(bevy::prelude::OnExit::<$type>($phase),$exit);)*
+    };
+}
+
 fn main() {
-    App::new()
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
-            primary_window: Some(Window {
-                //(5)
-                title: "Flappy Dragon - Bevy Edition".to_string(),
-                resolution: bevy::window::WindowResolution::new(1024.0, 768.0),
-                ..default()
-            }),
+    let mut app = App::new();
+    add_phase!(app, GamePhase, GamePhase::Flapping, start => [setup], run => [gravity, flap, clamp, move_walls, hit_wall], exit => [cleanup::<FlappyElement>]);
+    app.add_plugins(DefaultPlugins.set(WindowPlugin {
+        primary_window: Some(Window {
+            //(5)
+            title: "Flappy Dragon - Bevy Edition".to_string(),
+            resolution: bevy::window::WindowResolution::new(1024.0, 768.0),
             ..default()
-        }))
-        .add_plugins(RandomPlugin)
-        .add_plugins(GameStatePlugin::new(
-            GamePhase::MainMenu,
-            GamePhase::Flapping,
-            GamePhase::GameOver,
-        ))
-        // dus bedoeling is om hier OnEnter en OnExit van zelfde state weg te werken
-        // één macro zou moeten aangeven dat we iets willen doen voor enter/run/exit van zelfde
-        // state (Flapping)
-        .add_systems(OnEnter(GamePhase::Flapping), setup) // load assets, spawn obstacles
-        .add_systems(
-            Update,
-            (gravity, flap, clamp, move_walls, hit_wall).run_if(in_state(GamePhase::Flapping)),
-        )
-        .add_systems(OnExit(GamePhase::Flapping), cleanup::<FlappyElement>)
-        .run();
+        }),
+        ..default()
+    }))
+    .add_plugins(RandomPlugin)
+    .add_plugins(GameStatePlugin::new(
+        GamePhase::MainMenu,
+        GamePhase::Flapping,
+        GamePhase::GameOver,
+    ))
+    .run();
 }
 
 fn setup(
