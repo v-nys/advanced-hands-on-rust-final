@@ -47,6 +47,9 @@ fn main() {
             GamePhase::Flapping,
             GamePhase::GameOver,
         ))
+        // dus bedoeling is om hier OnEnter en OnExit van zelfde state weg te werken
+        // één macro zou moeten aangeven dat we iets willen doen voor enter/run/exit van zelfde
+        // state (Flapping)
         .add_systems(OnEnter(GamePhase::Flapping), setup) // load assets, spawn obstacles
         .add_systems(
             Update,
