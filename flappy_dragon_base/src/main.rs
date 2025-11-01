@@ -3,8 +3,8 @@ use my_library::*;
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash, Default, States, Copy)]
 enum GamePhase {
-    MainMenu,
     #[default]
+    MainMenu,
     Flapping,
     GameOver,
 }
