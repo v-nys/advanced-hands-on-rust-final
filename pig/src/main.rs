@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, EguiPlugin, egui};
-use my_library::{RandomNumberGenerator, RandomPlugin, add_phase, cleanup};
+use my_library::{GameStatePlugin, RandomNumberGenerator, RandomPlugin, add_phase, cleanup};
 
 // Vincent: States is specificially for state machine view of games
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Default, States)]
@@ -217,11 +217,23 @@ fn main() {
     add_phase!(app, GamePhase, GamePhase::Cpu, start => [], run => [ cpu, check_game_over, display_score ], exit => [ ]);
     add_phase!(app, GamePhase, GamePhase::End, start => [], run => [ end_game ], exit => [ cleanup::<GameElement> ]);
     add_phase!(app, GamePhase, GamePhase::GameOver, start => [], run => [ display_final_score ], exit => [ ]);
-    app.add_plugins(DefaultPlugins)
-        .add_plugins(RandomPlugin)
-        .add_plugins(EguiPlugin {
-            enable_multipass_for_primary_context: false,
-        })
-        .add_systems(Startup, setup)
-        .run();
+    app.add_plugins(DefaultPlugins.set(WindowPlugin {
+        primary_window: Some(Window {
+            title: "Pig".to_string(),
+            resolution: bevy::window::WindowResolution::new(1024.0, 768.0),
+            ..default()
+        }),
+        ..default()
+    }))
+    .add_plugins(GameStatePlugin::new(
+        GamePhase::MainMenu,
+        GamePhase::Start,
+        GamePhase::GameOver,
+    ))
+    .add_plugins(RandomPlugin)
+    .add_plugins(EguiPlugin {
+        enable_multipass_for_primary_context: false,
+    })
+    .add_systems(Startup, setup)
+    .run();
 }
