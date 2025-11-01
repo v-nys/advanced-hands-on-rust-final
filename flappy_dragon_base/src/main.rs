@@ -30,7 +30,7 @@ struct Assets {
     wall: Handle<Image>,
 }
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     let mut app = App::new();
     add_phase!(app, GamePhase, GamePhase::Flapping, start => [setup], run => [gravity, flap, clamp, move_walls, hit_wall], exit => [cleanup::<FlappyElement>]);
     app.add_plugins(DefaultPlugins.set(WindowPlugin {
@@ -48,7 +48,15 @@ fn main() {
         GamePhase::Flapping,
         GamePhase::GameOver,
     ))
+    .add_plugins(
+        AssetManager::new()
+            // oké, dus tag staat toe assets makkelijk aan te spreken
+            // maar is enum voor tags dan interessant?
+            .add_image("dragon", "flappy_dragon.png")?
+            .add_image("wall", "wall.png")?,
+    )
     .run();
+    Ok(())
 }
 
 fn setup(
@@ -57,7 +65,6 @@ fn setup(
     rng: ResMut<RandomNumberGenerator>, //(7)
 ) {
     let assets = Assets {
-        //(8)
         dragon: asset_server.load("flappy_dragon.png"),
         wall: asset_server.load("wall.png"),
     };

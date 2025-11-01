@@ -9,6 +9,7 @@ rand = { workspace = true }
 # optional means Cargo won't include it unless requested
 rand_xorshift = { workspace = true, optional = true }
 bevy = { workspace = true }
+anyhow = "1.0.100"
 
 [[bench]]
 name = "random"
