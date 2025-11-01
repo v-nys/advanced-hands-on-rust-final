@@ -56,13 +56,18 @@ fn setup(
     assets: Res<AssetStore>,
     loaded_assets: AssetResource,
 ) {
-    commands.spawn((Camera2d::default(), FlappyElement)); //(9)
-    commands.spawn((
-        Sprite::from_image(assets.get_handle("dragon", &loaded_assets).unwrap()),
-        Transform::from_xyz(-490.0, 0.0, 1.0),
+    commands.spawn((Camera2d::default(), FlappyElement));
+    spawn_image!(
+        assets,
+        commands,
+        "dragon",
+        -490.0,
+        0.0,
+        1.0,
+        &loaded_assets,
         Flappy { gravity: 0.0 },
-        FlappyElement,
-    ));
+        FlappyElement
+    );
     build_wall(&mut commands, &assets, &loaded_assets, rng.range(-5..5));
 }
 
@@ -74,12 +79,17 @@ fn build_wall(
 ) {
     for y in -12..=12 {
         if y < gap_y - 4 || y > gap_y + 4 {
-            commands.spawn((
-                Sprite::from_image(assets.get_handle("wall", &loaded_assets).unwrap()),
-                Transform::from_xyz(512.0, y as f32 * 32.0, 1.0),
+            spawn_image!(
+                assets,
+                commands,
+                "wall",
+                512.0,
+                y as f32 * 32.0,
+                1.0,
+                &loaded_assets,
                 Obstacle,
-                FlappyElement,
-            ));
+                FlappyElement
+            );
         }
     }
 }
